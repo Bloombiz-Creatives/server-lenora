@@ -101,3 +101,25 @@ exports.deleteBrand = catchAsyncError(async (req, res, next) => {
     deleteImageWithUrl()
 
 })
+
+
+
+
+exports.getEveryBrands = catchAsyncError(async (req, res, next) => {
+    try {
+        const brand = await Brand.find().sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: brand.length,
+            brand
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Fetching brands failed",
+            error: error.message,
+        });
+    }
+});
