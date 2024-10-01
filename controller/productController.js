@@ -133,14 +133,7 @@ exports.editProduct = catchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler('Product not found', 404));
         }
 
-        const category = await Category.findOne({
-            parent_category: parent_category,
-            name: sub_category
-        });
-
-        if (!category) {
-            return next(new ErrorHandler('Parent category and sub-category combination not found', 404));
-        }
+       
 
         product.name = name || product.name;
         product.description = description || product.description;
@@ -150,8 +143,8 @@ exports.editProduct = catchAsyncError(async (req, res, next) => {
         product.meta_desc = meta_desc || product.meta_desc;
         product.attribute = attribute || product.attribute;
         product.color = color || product.color;
-        product.category = category.parent_category;
-        product.sub_category = category.name;
+        product.parent_category = parent_category || product.parent_category;
+        product.sub_category = sub_category || product.sub_category;
         product.attribute_value = attribute_value || product.attribute_value;
 
         if (req.files && req.files.image) {
