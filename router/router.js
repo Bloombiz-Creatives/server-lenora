@@ -1,14 +1,14 @@
 const router = require('express').Router();
 const { upload, handleMulterErrors, flexibleUpload } = require('../middlewares/multer')
 const { register, login, logout, forgotPassword, verifyOtp, resetPassword } = require('../controller/authController');
-const { AddBrand, getAllBrands, deleteBrand } = require('../controller/brandController');
+const { AddBrand, getAllBrands, deleteBrand, getEveryBrands } = require('../controller/brandController');
 const { addCategory, getAllCategory, deleteCategory, updateCategory, getCategory, getDistinctParentCategories, editCategoryName, deleteCategoryName, addCategoryName, } = require('../controller/categoryController');
 const { addHomeHero, getHomeHero, updateHomeHero } = require('../controller/homeHeroController');
 const { addSubHero, getSubHero, updateSubHero } = require('../controller/homeSubHeroController');
 const { addPromo, getPromo, updatePromo } = require('../controller/homePromoController');
 const { addHomePage, editHomePage, getHomePage } = require('../controller/homePageContentController');
 const { addAttributes, getAllAttributes, getAttribute, editAttribute, deleteAttribute, editAttributeValue, deleteAttributeValue, addAttributeValue } = require('../controller/attributeController');
-const { addColor, getColors, deleteColor, editColor } = require('../controller/colorsController');
+const { addColor, getColors, deleteColor, editColor, getAllColors } = require('../controller/colorsController');
 const { getCategoryNamesByParent, addProduct, getProducts, editProduct, deleteProduct, toggleTodaysDeal, getTodaysDeals, toggleFeatured, getFeatured, getDistinctAttributeNames, getAttributeValues, getLatestProducts, getLastTenItems, getProductById, getDistinctCategoryParent, getCategoryNames } = require('../controller/productController');
 const { sendMessage } = require('../controller/messageController');
 const { enquiry } = require('../controller/enquiryController');
@@ -23,6 +23,8 @@ router.route('/password_reset').post(resetPassword);
 router.route('/brand').post(upload.single('image'), handleMulterErrors, AddBrand);
 router.route('/brand').get(upload.single('image'), handleMulterErrors, getAllBrands);
 router.route('/brand/:id').delete(deleteBrand);
+router.route('/brand/all').get(upload.single('image'), handleMulterErrors, getEveryBrands);
+
 
 router.route('/category').post(upload.fields([{ name: 'image', maxCount: 1 }, { name: 'icon', maxCount: 1 }]), addCategory);
 router.route('/category').get(upload.fields([{ name: 'image', maxCount: 1 }, { name: 'icon', maxCount: 1 }]), getAllCategory);
@@ -65,6 +67,8 @@ router.route('/color').post(upload.none(), addColor);
 router.route('/color').get(upload.none(), getColors);
 router.route('/color/:id').delete(deleteColor);
 router.route('/color/:id').put(upload.none(), editColor);
+router.route('/color/all').get(upload.none(), getAllColors);
+
 
 router.route('/categories/by-parent').get(upload.none(), getCategoryNamesByParent);
 router.route('/product').post(upload.fields([{ name: 'image', maxCount: 1 }, { name: 'gallery1', maxCount: 1 }, { name: 'gallery2', maxCount: 1 }, { name: 'gallery3', maxCount: 1 }, { name: 'gallery4', maxCount: 1 }, { name: 'gallery5', maxCount: 1 },]), addProduct);
