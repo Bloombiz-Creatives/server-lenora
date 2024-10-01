@@ -115,3 +115,23 @@ exports.editColor = catchAsyncError(async(req, res, next) => {
         next(new ErrorHandler(error.message, 500));
     }
 })
+
+
+exports.getAllColors = catchAsyncError(async (req, res, next) => {
+    try {
+        const color = await Colors.find().sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: color.length,
+            color
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Fetching colors failed",
+            error: error.message,
+        });
+    }
+});
