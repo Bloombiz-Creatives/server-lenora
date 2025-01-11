@@ -37,8 +37,8 @@ router.route('/category/:id/name').delete(deleteCategoryName);
 router.route('/category/:id/name').post(upload.none(), addCategoryName);
 
 
-router.route('/hero').post(upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 }, { name: 'image3', maxCount: 1 }]), handleMulterErrors, addHomeHero);
-router.route('/hero/:id').put(upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 }, { name: 'image3', maxCount: 1 }]), handleMulterErrors, updateHomeHero);
+router.route('/hero').post(upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 }, { name: 'image3', maxCount: 1 },{ name: 'image4', maxCount: 1 },{ name: 'image5', maxCount: 1 },{ name: 'image6', maxCount: 1 }]), handleMulterErrors, addHomeHero);
+router.route('/hero/:id').put(upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 }, { name: 'image3', maxCount: 1 },{ name: 'image4', maxCount: 1 },{ name: 'image5', maxCount: 1 },{ name: 'image6', maxCount: 1 }]), handleMulterErrors, updateHomeHero);
 router.route('/hero').get(getHomeHero);
 
 
