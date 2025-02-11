@@ -44,7 +44,6 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
             meta_title,
             meta_desc,
             attribute,
-            // attribute_value,
             color,
             parent_category,
             sub_category
