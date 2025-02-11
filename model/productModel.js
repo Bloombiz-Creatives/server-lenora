@@ -14,19 +14,12 @@ const productSchema = new mongoose.Schema({
         required: true
     },
     parent_category: {
-        // type: mongoose.Schema.Types.ObjectId,
-        // type: String,
-        // required: true,
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category',
         type: String,
         
     },
     sub_category: {
-        // type: mongoose.Schema.Types.ObjectId,
-        // type: String,
-        // required: true,
-
         type: [String],
     },
     brand: {
@@ -64,12 +57,20 @@ const productSchema = new mongoose.Schema({
         ref: 'Attribute',
         type: String,
     },
-   
-    attribute_value: {
-        type: [String], // Changed to array of strings
-    },
+    // attribute_value: {
+    //     type: [String], 
+    // },
+    attribute_value:[
+        {
+            value: String,
+            additional_price: {
+                type: Number,
+                default: 0
+            }
+        }
+    ],
     color: {
-        type: [mongoose.Schema.Types.ObjectId], // Changed to array of ObjectIds
+        type: [mongoose.Schema.Types.ObjectId], 
         ref: 'Colors',
         required: false
     },

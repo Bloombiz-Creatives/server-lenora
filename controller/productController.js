@@ -35,8 +35,6 @@ exports.getCategoryNamesByParent = catchAsyncError(async (req, res, next) => {
 
 
 exports.addProduct = catchAsyncError(async (req, res, next) => {
-    console.log('Request Body:', req.body);
-
     try {
         const {
             name,
@@ -46,7 +44,7 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
             meta_title,
             meta_desc,
             attribute,
-            attribute_value,
+            // attribute_value,
             color,
             parent_category,
             sub_category
@@ -56,21 +54,28 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler('All required fields must be filled', 400));
         }
 
-        // const category = await Category.findOne({
-        //     parent_category: parent_category,
-        //     name: sub_category
-        // });
-
-        // if (!category) {
-        //     return next(new ErrorHandler('Parent category not found', 404));
-        // }
-
         if (!req.files || !req.files.image) {
             return next(new ErrorHandler('Image is required', 400));
         }
 
+
+        let attribute_value = [];
+        if (req.body.attribute_value) {
+            try {
+                attribute_value = JSON.parse(req.body.attribute_value);
+                // Validate the structure of each attribute value
+                attribute_value = attribute_value.map(av => ({
+                    value: av.value,
+                    additional_price: parseFloat(av.additional_price) || 0
+                }));
+            } catch (error) {
+                console.error('Error parsing attribute_value:', error);
+                return next(new ErrorHandler('Invalid attribute value format', 400));
+            }
+        }
+
+
         const image = `${process.env.BACKEND_URL}/upload/${req.files.image[0].filename}`;
-        // const gallery = req.files.gallery ? req.files.gallery.map(file => `${process.env.BACKEND_URL}/upload/${file.filename}`) : [];
         const gallery1 = req.files && req.files['gallery1'] ? `${process.env.BACKEND_URL}/upload/${req.files['gallery1'][0].filename}` : undefined;
         const gallery2 = req.files && req.files['gallery2'] ? `${process.env.BACKEND_URL}/upload/${req.files['gallery2'][0].filename}` : undefined;
         const gallery3 = req.files && req.files['gallery3'] ? `${process.env.BACKEND_URL}/upload/${req.files['gallery3'][0].filename}` : undefined;
@@ -82,8 +87,6 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
             description,
             price,
             brand,
-            // category: category.parent_category,
-            // sub_category: category.name,
             parent_category,
             sub_category,
             image,
@@ -120,7 +123,7 @@ exports.editProduct = catchAsyncError(async (req, res, next) => {
             meta_title,
             meta_desc,
             attribute,
-            attribute_value,
+            // attribute_value,
             color,
             parent_category,
             sub_category
@@ -133,7 +136,19 @@ exports.editProduct = catchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler('Product not found', 404));
         }
 
-       
+        let attribute_value = product.attribute_value; 
+        if (req.body.attribute_value) {
+            try {
+                attribute_value = JSON.parse(req.body.attribute_value);
+                attribute_value = attribute_value.map(av => ({
+                    value: av.value,
+                    additional_price: parseFloat(av.additional_price) || 0
+                }));
+            } catch (error) {
+                console.error('Error parsing attribute_value:', error);
+                return next(new ErrorHandler('Invalid attribute value format', 400));
+            }
+        }
 
         product.name = name || product.name;
         product.description = description || product.description;
@@ -194,62 +209,6 @@ exports.deleteProduct = catchAsyncError(async (req, res, next) => {
         next(error);
     }
 });
-
-
-
-// exports.getProducts = catchAsyncError(async (req, res, next) => {
-//     try {
-//         const { page = 1, limit = 5, name, brand, parent_category } = req.query;
-//         const effectiveLimit = Math.max(parseInt(limit), 5);
-//         const skip = (page - 1) * effectiveLimit;
-
-//         const queryObject = {};
-
-//         if (name) {
-//             queryObject.name = { $regex: name, $options: 'i' };
-//         }
-
-//         if (brand) {
-//             queryObject.brand = brand;
-//         }
-
-//         if (parent_category) {
-//             queryObject.category = parent_category;
-//         }
-
-//         const totalCount = await Product.countDocuments(queryObject);
-//         const totalPages = Math.ceil(totalCount / effectiveLimit);
-
-//         const products = await Product.find(queryObject)
-//             .populate('brand')
-//             .skip(skip)
-//             .limit(effectiveLimit)
-//             .sort({ createdAt: -1 });
-
-//         const paginationInfo = {
-//             currentPage: parseInt(page),
-//             nextPage: page < totalPages ? parseInt(page) + 1 : null,
-//             prevPage: page > 1 ? parseInt(page) - 1 : null,
-//             totalPages,
-//             totalCount,
-//         };
-
-
-//         res.status(200).json({
-//             success: true,
-//             count: products.length,
-//             products,
-//             paginationInfo
-//         });
-
-//     } catch (error) {
-//         res.status(500).json({
-//             success: false,
-//             message: "Fetching products failed",
-//             error: error.message,
-//         });
-//     }
-// });
 
 
 exports.getProducts = catchAsyncError(async (req, res, next) => {

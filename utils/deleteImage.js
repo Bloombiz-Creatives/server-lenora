@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const url = require("url");
+
 const deleteImageWithUrl = (imageUrl) => {
   const name = url.parse(imageUrl);
   const fileName = path.basename(name.pathname);
@@ -14,5 +15,4 @@ const deleteImageWithUrl = (imageUrl) => {
   });
 };
 module.exports = deleteImageWithUrl;
-
 
