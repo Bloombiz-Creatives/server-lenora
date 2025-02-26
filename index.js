@@ -14,7 +14,6 @@ const dotenvConfig = dotenv.config({
 
 app.use('/upload', express.static(path.join(__dirname, 'upload')));
 
-
 if (dotenvConfig.error) {
     console.log('Error Loading .env file',dotenvConfig.error);
 }
