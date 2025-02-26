@@ -52,23 +52,27 @@ const productSchema = new mongoose.Schema({
     meta_desc: {
         type: String,
     },
-    attribute: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Attribute',
-        type: String,
-    },
-    // attribute_value: {
-    //     type: [String], 
-    // },
-    attribute_value:[
-        {
-            value: String,
-            additional_price: {
-                type: Number,
-                default: 0
-            }
-        }
-    ],
+    attributes: [{
+        attribute: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Attribute',
+        },
+        attribute_value: [{
+            value: String
+        }]
+    }],
+    variants: [{
+        combination: String, 
+        price: {
+            type: Number,
+            required: true
+        },
+        stock: {
+            type: Number,
+            default: 0
+        },
+        sku: String 
+    }],
     color: {
         type: [mongoose.Schema.Types.ObjectId], 
         ref: 'Colors',

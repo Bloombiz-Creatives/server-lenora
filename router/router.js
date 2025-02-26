@@ -87,8 +87,6 @@ router.route('/product/:id').get(getProductById);
 router.route('/parent_category').get(getDistinctCategoryParent);
 router.route('/cat/:id/name').get(getCategoryNames);
 
-
-
 router.route('/message').post(upload.none(),sendMessage);
 router.route('/enquiry').post(upload.fields([{ name: 'design', maxCount: 1 }]),enquiry);
 

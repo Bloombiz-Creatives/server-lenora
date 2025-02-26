@@ -101,7 +101,6 @@ exports.updateCategory = CatchAsyncError(async (req, res, next) => {
             }
         }
 
-        console.log('Update Data:', updateData);
 
         const category = await Category.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
 

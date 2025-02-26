@@ -11,17 +11,14 @@ exports.getCategoryNamesByParent = catchAsyncError(async (req, res, next) => {
     const { parent_category } = req.query;
 
     if (!parent_category) {
-        console.log('Parent category is missing');
         return res.status(400).json({ message: "Parent category is required" });
     }
 
     const trimmedParentCategory = parent_category.trim();
 
     const categories = await Category.find({ parent_category: trimmedParentCategory }).select('name');
-    console.log('Found categories:', categories);
 
     if (!categories.length) {
-        console.log('No categories found for:', trimmedParentCategory);
         return res.status(404).json({ message: "No categories found for the specified parent category" });
     }
 
@@ -43,7 +40,6 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
             brand,
             meta_title,
             meta_desc,
-            attribute,
             color,
             parent_category,
             sub_category
@@ -57,22 +53,56 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
             return next(new ErrorHandler('Image is required', 400));
         }
 
-
-        let attribute_value = [];
-        if (req.body.attribute_value) {
+        let attributes = [];
+        if (req.body.attributes) {
             try {
-                attribute_value = JSON.parse(req.body.attribute_value);
-                // Validate the structure of each attribute value
-                attribute_value = attribute_value.map(av => ({
-                    value: av.value,
-                    additional_price: parseFloat(av.additional_price) || 0
+                attributes = JSON.parse(req.body.attributes);
+                
+                if (!Array.isArray(attributes)) {
+                    return next(new ErrorHandler('Attributes must be an array', 400));
+                }
+                
+                attributes = attributes.map(attr => ({
+                    attribute: attr.attribute,
+                    attribute_value: attr.attribute_value.map(av => ({
+                        value: av.value
+                    }))
                 }));
             } catch (error) {
-                console.error('Error parsing attribute_value:', error);
-                return next(new ErrorHandler('Invalid attribute value format', 400));
+                console.error('Error parsing attributes:', error);
+                return next(new ErrorHandler('Invalid attributes format', 400));
             }
         }
 
+        let variants = [];
+        if (req.body.variants) {
+            try {
+                variants = JSON.parse(req.body.variants);
+                
+                if (!Array.isArray(variants)) {
+                    return next(new ErrorHandler('Variants must be an array', 400));
+                }
+                
+                variants = variants.map(variant => ({
+                    combination: variant.combination,
+                    price: parseFloat(variant.price),
+                    stock: parseInt(variant.stock) || 0,
+                    sku: variant.sku || ''
+                }));
+            } catch (error) {
+                console.error('Error parsing variants:', error);
+                return next(new ErrorHandler('Invalid variants format', 400));
+            }
+        } else if (attributes && attributes.length > 0) {
+            variants = generateVariantCombinations(attributes);
+            
+            variants = variants.map((combo, index) => ({
+                combination: combo.combination,
+                price: price,
+                stock: 0,
+                sku: `${name.substring(0, 3).toUpperCase()}-${index + 1}`.replace(/\s+/g, '-')
+            }));
+        }
 
         const image = `${process.env.BACKEND_URL}/upload/${req.files.image[0].filename}`;
         const gallery1 = req.files && req.files['gallery1'] ? `${process.env.BACKEND_URL}/upload/${req.files['gallery1'][0].filename}` : undefined;
@@ -96,8 +126,8 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
             gallery5,
             meta_title,
             meta_desc,
-            attribute,
-            attribute_value,
+            attributes,
+            variants, 
             color
         });
 
@@ -111,7 +141,6 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
     }
 });
 
-
 exports.editProduct = catchAsyncError(async (req, res, next) => {
     try {
         const {
@@ -121,32 +150,66 @@ exports.editProduct = catchAsyncError(async (req, res, next) => {
             brand,
             meta_title,
             meta_desc,
-            attribute,
-            // attribute_value,
             color,
             parent_category,
             sub_category
         } = req.body;
 
-
-        const product = await Product.findByIdAndUpdate(req.params.id);
+        const product = await Product.findById(req.params.id);
 
         if (!product) {
             return next(new ErrorHandler('Product not found', 404));
         }
 
-        let attribute_value = product.attribute_value; 
-        if (req.body.attribute_value) {
+        let attributes = product.attributes;
+        if (req.body.attributes) {
             try {
-                attribute_value = JSON.parse(req.body.attribute_value);
-                attribute_value = attribute_value.map(av => ({
-                    value: av.value,
-                    additional_price: parseFloat(av.additional_price) || 0
+                attributes = JSON.parse(req.body.attributes);
+                
+                if (!Array.isArray(attributes)) {
+                    return next(new ErrorHandler('Attributes must be an array', 400));
+                }
+                
+                product.attributes = attributes.map(attr => ({
+                    attribute: attr.attribute,
+                    attribute_value: attr.attribute_value.map(av => ({
+                        value: av.value
+                    }))
                 }));
             } catch (error) {
-                console.error('Error parsing attribute_value:', error);
-                return next(new ErrorHandler('Invalid attribute value format', 400));
+                console.error('Error parsing attributes:', error);
+                return next(new ErrorHandler('Invalid attributes format', 400));
             }
+        }
+
+        if (req.body.variants) {
+            try {
+                const variants = JSON.parse(req.body.variants);
+                
+                if (!Array.isArray(variants)) {
+                    return next(new ErrorHandler('Variants must be an array', 400));
+                }
+                
+                // Process variants
+                product.variants = variants.map(variant => ({
+                    combination: variant.combination,
+                    price: parseFloat(variant.price),
+                    stock: parseInt(variant.stock) || 0,
+                    sku: variant.sku || ''
+                }));
+            } catch (error) {
+                console.error('Error parsing variants:', error);
+                return next(new ErrorHandler('Invalid variants format', 400));
+            }
+        } else if (attributes && attributes.length > 0 && (!product.variants || product.variants.length === 0)) {
+            const variants = generateVariantCombinations(attributes);
+            
+            product.variants = variants.map((combo, index) => ({
+                combination: combo.combination,
+                price: price || product.price,
+                stock: 0,
+                sku: `${(name || product.name).substring(0, 3).toUpperCase()}-${index + 1}`.replace(/\s+/g, '-')
+            }));
         }
 
         product.name = name || product.name;
@@ -155,16 +218,13 @@ exports.editProduct = catchAsyncError(async (req, res, next) => {
         product.brand = brand || product.brand;
         product.meta_title = meta_title || product.meta_title;
         product.meta_desc = meta_desc || product.meta_desc;
-        product.attribute = attribute || product.attribute;
         product.color = color || product.color;
         product.parent_category = parent_category || product.parent_category;
         product.sub_category = sub_category || product.sub_category;
-        product.attribute_value = attribute_value || product.attribute_value;
 
         if (req.files && req.files.image) {
             product.image = `${process.env.BACKEND_URL}/upload/${req.files.image[0].filename}`;
         }
-
 
         if (req.files) {
             product.gallery1 = req.files.gallery1 ? `${process.env.BACKEND_URL}/upload/${req.files.gallery1[0].filename}` : product.gallery1;
@@ -187,6 +247,34 @@ exports.editProduct = catchAsyncError(async (req, res, next) => {
     }
 });
 
+// Fix the generateVariantCombinations function
+function generateVariantCombinations(attributes) {
+    if (!attributes || attributes.length === 0) return [];
+    
+    // Start with the first attribute's values
+    let combinations = attributes[0].attribute_value.map(v => ({
+        combination: v.value,
+        price: 0 
+    }));
+    
+    // For each subsequent attribute
+    for (let i = 1; i < attributes.length; i++) {
+        const newCombinations = [];
+        
+        for (const existing of combinations) {
+            for (const value of attributes[i].attribute_value) {
+                newCombinations.push({
+                    combination: `${existing.combination}-${value.value}`,
+                    price: 0 
+                });
+            }
+        }
+        
+        combinations = newCombinations;
+    }
+    
+    return combinations;
+}
 
 exports.deleteProduct = catchAsyncError(async (req, res, next) => {
     try {
@@ -450,7 +538,7 @@ exports.getProductById = catchAsyncError(async (req, res, next) => {
             select: 'name' 
         })
         .populate({
-            path: 'attribute',  
+            path: 'attributes.attribute',  
             select: 'name'     
         });
 

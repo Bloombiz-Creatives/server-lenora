@@ -139,12 +139,7 @@ exports.verifyOtp = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler('User not found', 404));
     }
 
-    console.log('Received OTP:', resetPasswordOTP);
-    console.log('Stored OTP:', user.resetPasswordOTP);
-
     const hashedOtp = crypto.createHash('sha256').update(resetPasswordOTP).digest('hex');
-
-    console.log('Hashed OTP:', hashedOtp);
 
     if (hashedOtp !== user.resetPasswordOTP || Date.now() > user.resetPasswordOTPExpires) {
         return next(new ErrorHandler('Invalid or expired OTP', 400));
