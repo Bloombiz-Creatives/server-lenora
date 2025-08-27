@@ -9,13 +9,13 @@ const router = require('./router/router')
 require('dotenv').config();
 
 const dotenvConfig = dotenv.config({
-    path:path.resolve(__dirname,'./config', '.env')
+    path: path.resolve(__dirname, './config', '.env')
 })
 
 app.use('/upload', express.static(path.join(__dirname, 'upload')));
 
 if (dotenvConfig.error) {
-    console.log('Error Loading .env file',dotenvConfig.error);
+    console.log('Error Loading .env file', dotenvConfig.error);
 }
 
 app.use(express.json());
@@ -23,9 +23,13 @@ app.use(cookieParser());
 
 app.use(cors());
 
+app.get('/', (req, res) => {
+    res.json({ message: "Hello, Server Started Lenora" });
+});
+
 mongoose.connect(process.env.MONGO, {
-    // useNewUrlParser: true,
-    // useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
 }).then(() => {
     console.log("Database is connected successfully 😎 ");
     app.listen(process.env.PORT, () => {
